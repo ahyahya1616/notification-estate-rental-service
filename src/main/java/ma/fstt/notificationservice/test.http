@@ -1,0 +1,30 @@
+### ===============================
+### Marquer une notification comme lue
+### ===============================
+PUT http://localhost:8085/api/notifications/1/read
+Content-Type: application/json
+
+
+### ===============================
+### Obtenir le nombre de messages DLQ non traités
+### ===============================
+GET http://localhost:8085/api/notifications/dlq/count
+
+
+### ===============================
+### Obtenir les messages DLQ anciens (par défaut 7 jours)
+### ===============================
+GET http://localhost:8085/api/notifications/dlq/old
+
+
+### ===============================
+### Obtenir les messages DLQ plus anciens qu’un nombre de jours précis
+### ===============================
+GET http://localhost:8085/api/notifications/dlq/old?daysOld=14
+
+
+### ===============================
+### Retenter le traitement des messages DLQ
+### ===============================
+POST http://localhost:8085/api/notifications/dlq/retry
+Content-Type: application/json

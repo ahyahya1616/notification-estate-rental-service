@@ -7,6 +7,8 @@ import ma.fstt.notificationservice.enums.EventType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 @Entity
 @Table(name = "notifications")
 @Getter
@@ -29,6 +31,13 @@ public class Notification {
 
     @Column(nullable = false, length = 1000)
     private String message;
+
+    // ✅ AJOUT DU CHAMP METADATA
+    @ElementCollection
+    @CollectionTable(name = "notification_metadata", joinColumns = @JoinColumn(name = "notification_id"))
+    @MapKeyColumn(name = "meta_key")
+    @Column(name = "meta_value")
+    private Map<String, String> metadata;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

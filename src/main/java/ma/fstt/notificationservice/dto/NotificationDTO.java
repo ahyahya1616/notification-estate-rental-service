@@ -22,5 +22,5 @@ public class NotificationDTO {
     private String message;
     private Status status;
     private LocalDateTime sentAt;
-    private Map<String, Object> metadata;
+    private Map<String, String> metadata;
 }

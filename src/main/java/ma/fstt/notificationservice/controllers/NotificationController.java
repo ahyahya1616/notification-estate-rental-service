@@ -1,7 +1,9 @@
 package ma.fstt.notificationservice.controllers;
 
 import lombok.RequiredArgsConstructor;
+import ma.fstt.notificationservice.dto.NotificationDTO;
 import ma.fstt.notificationservice.entities.DeadLetterQueue;
+import ma.fstt.notificationservice.entities.UserNotification;
 import ma.fstt.notificationservice.services.DeadLetterQueueService;
 import ma.fstt.notificationservice.services.NotificationService;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,20 @@ public class NotificationController {
         notificationService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/unread/count/{userId}")
+    public ResponseEntity<Long> getUnreadNotificationsCount(@PathVariable Long userId) {
+        Long count = notificationService.countUnreadByUserId(userId);
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<NotificationDTO>> getUserNotifications(@PathVariable Long userId) {
+        List<NotificationDTO> notifications = notificationService.getNotificationsByUserId(userId);
+        return ResponseEntity.ok(notifications);
+    }
+
+
 
     @GetMapping("/dlq/count")
     public ResponseEntity<Long> getDlqCount() {

@@ -22,5 +22,5 @@ public class NotificationEvent implements Serializable {
     private String title;
     private String message;
     private List<Channel> channels;
-    private Map<String, Object> metadata;
+    private Map<String, String> metadata;
 }

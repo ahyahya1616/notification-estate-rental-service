@@ -2,11 +2,14 @@ package ma.fstt.notificationservice.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ma.fstt.notificationservice.dto.NotificationDTO;
 import ma.fstt.notificationservice.dto.NotificationEvent;
 import ma.fstt.notificationservice.entities.Notification;
 import ma.fstt.notificationservice.entities.UserNotification;
 import ma.fstt.notificationservice.enums.Channel;
 import ma.fstt.notificationservice.enums.Status;
+import ma.fstt.notificationservice.exceptions.InvalidNotificationDataException;
+import ma.fstt.notificationservice.exceptions.NotificationSendException;
 import ma.fstt.notificationservice.repositories.NotificationRepository;
 import ma.fstt.notificationservice.repositories.UserNotificationRepository;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,10 @@ public class NotificationService {
     @Transactional
     public void processNotification(NotificationEvent event) {
 
+        if (event == null || event.getUserIds() == null || event.getUserIds().isEmpty()) {
+            throw new InvalidNotificationDataException("L'événement de notification ou les utilisateurs sont invalides.");
+        }
+
         log.info("Processing notification event: type={}, users={}",
                 event.getEventType(), event.getUserIds().size());
 
@@ -35,6 +43,7 @@ public class NotificationService {
                 .eventType(event.getEventType())
                 .title(event.getTitle())
                 .message(event.getMessage())
+                .metadata(event.getMetadata())
                 .build();
 
         List<UserNotification> userNotifications = new ArrayList<>();
@@ -56,7 +65,47 @@ public class NotificationService {
         notification.setUserNotifications(userNotifications);
         notificationRepository.save(notification);
 
-        sendNotifications(event, userNotifications);
+        try {
+            sendNotifications(event, userNotifications);
+        } catch (Exception e) {
+            throw new NotificationSendException("Erreur lors de l'envoi des notifications.", e);
+        }
+    }
+
+    public Long countUnreadByUserId(Long userId) {
+        return userNotificationRepository.countByUserIdAndStatus(userId, Status.UNREAD);
+    }
+
+    /**
+     * ✅ MÉTHODE AJOUTÉE : Récupère toutes les notifications d'un utilisateur
+     */
+    public List<NotificationDTO> getNotificationsByUserId(Long userId) {
+        log.info("Fetching notifications for userId={}", userId);
+
+        List<UserNotification> userNotifications = userNotificationRepository
+                .findByUserIdOrderBySentAtDesc(userId);
+
+        return userNotifications.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ MÉTHODE AJOUTÉE : Convertit UserNotification en NotificationDTO
+     */
+    private NotificationDTO convertToDTO(UserNotification userNotification) {
+        Notification notification = userNotification.getNotification();
+
+        return NotificationDTO.builder()
+                .id(userNotification.getId())
+                .userId(userNotification.getUserId())
+                .eventType(notification.getEventType())
+                .title(notification.getTitle())
+                .message(notification.getMessage())
+                .status(userNotification.getStatus())
+                .sentAt(userNotification.getSentAt())
+                .metadata(notification.getMetadata()) // ✅ CORRECTION : Récupérer les metadata de la BDD
+                .build();
     }
 
     private void sendNotifications(NotificationEvent event, List<UserNotification> userNotifications) {
@@ -64,6 +113,7 @@ public class NotificationService {
         for (UserNotification un : userNotifications) {
             try {
                 if (un.getChannel() == Channel.PUSH) {
+                    // ✅ CORRECTION : Passer les metadata de l'événement
                     pushNotificationService.sendPushNotification(un, event.getMetadata());
                 }
 
@@ -86,6 +136,7 @@ public class NotificationService {
         userNotificationRepository.findById(userNotificationId)
                 .ifPresent(userNotification -> {
                     userNotification.setStatus(Status.READ);
+                    userNotificationRepository.save(userNotification); // ✅ AJOUTÉ : Sauvegarder explicitement
                     log.info("Notification marked as read: id={}", userNotificationId);
                 });
     }
