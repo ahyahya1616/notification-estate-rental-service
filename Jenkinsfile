@@ -2,6 +2,6 @@
 
 standardBackendPipeline(
     appName: 'notification-estate-rental-service',
-    registry: 'yassinekamouss',
+    registry: 'saaymo',
      sonarProjectKey: 'notification-service'
 )
