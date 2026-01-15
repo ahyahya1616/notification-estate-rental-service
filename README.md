@@ -17,17 +17,19 @@ This microservice acts as a Kafka consumer for notification events and as a WebS
 ```mermaid
 flowchart LR
   Producer[(External Producer)] -->|publish| KafkaTopic[(Kafka Topic: notifications)]
-  KafkaTopic --> NotificationConsumer[Notification Consumer<br/>(this microservice)]
+  KafkaTopic --> NotificationConsumer["Notification Consumer (this microservice)"]
   NotificationConsumer -->|map| NotificationService[NotificationService]
   NotificationService -->|persist| DB[(Database)]
   NotificationService -->|send| WebSocketServer[WebSocket Server]
-  WebSocketServer -->|push| Frontend[Frontend Clients (browsers/mobiles)]
+  WebSocketServer -->|push| Frontend[Frontend Clients]
   NotificationService -->|on failure| DeadLetterQueue[(Dead Letter Queue)]
-  DeadLetterQueue -->|inspect/reprocess| Ops[Ops / Developers]
+  DeadLetterQueue -->|inspect / reprocess| Ops[Ops / Developers]
+
   subgraph storage
     DB
     DeadLetterQueue
   end
+
 ```
 
 ## Components & Roles (detailed)
