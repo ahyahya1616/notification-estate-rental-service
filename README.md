@@ -17,7 +17,7 @@ This microservice acts as a Kafka consumer for notification events and as a WebS
 ```mermaid
 flowchart LR
   Producer[(External Producer)] -->|publish| KafkaTopic[(Kafka Topic: notifications)]
-  KafkaTopic --> NotificationConsumer[Notification Consumer\n(this microservice)]
+  KafkaTopic --> NotificationConsumer[Notification Consumer<br/>(this microservice)]
   NotificationConsumer -->|map| NotificationService[NotificationService]
   NotificationService -->|persist| DB[(Database)]
   NotificationService -->|send| WebSocketServer[WebSocket Server]
